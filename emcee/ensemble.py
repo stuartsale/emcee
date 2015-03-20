@@ -369,17 +369,20 @@ class EnsembleSampler(Sampler):
         # If the `pool` property of the sampler has been set (i.e. we want
         # to use `multiprocessing`), use the `pool`'s map method. Otherwise,
         # just use the built-in `map` function.
-        if self.pool is not None:
-            M = self.pool.map
-        else:
-            M = map
+#        if self.pool is not None:
+#            M = self.pool.map
+#        else:
+#            M = map
 
         # sort the tasks according to (user-defined) some runtime guess
         if self.runtime_sortingfn is not None:
             p, idx = self.runtime_sortingfn(p)
 
         # Run the log-probability calculations (optionally in parallel).
-        results = list(M(self.lnprobfn, [p[i] for i in range(len(p))]))
+#        results = list(map(self.lnprobfn, [p[i] for i in range(len(p))]))
+
+        # use vectorised self.lnprobfn
+        results=self.lnprobfn(p.T)
 
         try:
             lnprob = np.array([float(l[0]) for l in results])
