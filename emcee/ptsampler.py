@@ -248,20 +248,27 @@ class PTSampler(Sampler):
 
         """
         p = np.copy(np.array(p0))
-
+        
         # If we have no lnprob or logls compute them
         if lnprob0 is None or lnlike0 is None:
-            fn = PTLikePrior(self.logl, self.logp, self.loglargs,
-                             self.logpargs, self.loglkwargs, self.logpkwargs)
-            if self.pool is None:
-                results = list(map(fn, p.reshape((-1, self.dim))))
-            else:
-                results = list(self.pool.map(fn, p.reshape((-1, self.dim))))
+#            fn = PTLikePrior(self.logl, self.logp, self.loglargs,
+#                             self.logpargs, self.loglkwargs, self.logpkwargs)
+#            if self.pool is None:
+#                results = list(map(fn, p.reshape((-1, self.dim))))
+#            else:
+#                results = list(self.pool.map(fn, p.reshape((-1, self.dim))))
 
-            logls = np.array([r[0] for r in results]).reshape((self.ntemps,
-                                                               self.nwalkers))
-            logps = np.array([r[1] for r in results]).reshape((self.ntemps,
-                                                               self.nwalkers))
+#            logls = np.array([r[0] for r in results]).reshape((self.ntemps,
+#                                                               self.nwalkers))
+#            logps = np.array([r[1] for r in results]).reshape((self.ntemps,
+#                                                               self.nwalkers))
+
+            logls=self.logl(p.reshape((-1, self.dim)).T, *self.loglargs,
+                             **self.loglkwargs).reshape((self.ntemps, self.nwalkers))
+
+            logps=self.logp(p.reshape((-1, self.dim)).T, *self.logpargs,
+                             **self.logpkwargs).reshape((self.ntemps, self.nwalkers))
+                             
 
             lnlike0 = logls
             lnprob0 = logls * self.betas.reshape((self.ntemps, 1)) + logps
@@ -315,19 +322,26 @@ class PTSampler(Sampler):
                         (self.nwalkers // 2, 1)) * (pupdate[k, :, :] -
                                                    psample[k, js, :])
 
-                fn = PTLikePrior(self.logl, self.logp, self.loglargs,
-                                 self.logpargs, self.loglkwargs,
-                                 self.logpkwargs)
-                if self.pool is None:
-                    results = list(map(fn, qs.reshape((-1, self.dim))))
-                else:
-                    results = list(self.pool.map(fn, qs.reshape((-1,
-                                                                 self.dim))))
+#                fn = PTLikePrior(self.logl, self.logp, self.loglargs,
+#                                 self.logpargs, self.loglkwargs,
+#                                 self.logpkwargs)
+#                if self.pool is None:
+#                    results = list(map(fn, qs.reshape((-1, self.dim))))
+#                else:
+#                    results = list(self.pool.map(fn, qs.reshape((-1,
+#                                                                 self.dim))))
 
-                qslogls = np.array([r[0] for r in results]).reshape(
-                    (self.ntemps, self.nwalkers//2))
-                qslogps = np.array([r[1] for r in results]).reshape(
-                    (self.ntemps, self.nwalkers//2))
+#                qslogls = np.array([r[0] for r in results]).reshape(
+#                    (self.ntemps, self.nwalkers//2))
+#                qslogps = np.array([r[1] for r in results]).reshape(
+#                    (self.ntemps, self.nwalkers//2))
+
+                qslogls=self.logl(qs.reshape((-1, self.dim)).T, *self.loglargs,
+                                 **self.loglkwargs).reshape((self.ntemps, self.nwalkers//2))
+
+                qslogps=self.logp(qs.reshape((-1, self.dim)).T, *self.logpargs,
+                                 **self.logpkwargs).reshape((self.ntemps, self.nwalkers//2))
+
                 qslnprob = qslogls * self.betas.reshape((self.ntemps, 1)) \
                     + qslogps
 
